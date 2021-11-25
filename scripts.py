@@ -1,7 +1,6 @@
 import random
 
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
-from models import Chastisement, Commendation, Lesson, Mark, Schoolkid
+from datacenter.models import Chastisement, Commendation, Lesson, Mark, Schoolkid
 
 COMMENDATIONS = ('Молодец!', 'Отлично!', 'Хорошо!',
                  'Гораздо лучше, чем я ожидал!', 'Ты меня приятно удивил!',
@@ -30,13 +29,16 @@ def create_commendation(name, subject):
             subject__title__contains=subject).order_by(
             '-date', '-timeslot'
         ).first()
+        if lessons_fetch is None:
+            print(f'Нет урока {subject}, для {name}, задайте поиск точнее')
+            raise SystemExit(1)
         commendation = random.choice(COMMENDATIONS)
         Commendation.objects.create(
             text=commendation, created=lessons_fetch.date, schoolkid=schoolkid,
             subject=lessons_fetch.subject, teacher=lessons_fetch.teacher)
-    except MultipleObjectsReturned:
+    except Schoolkid.MultipleObjectsReturned:
         print(f'Найдено несколько совпадений с  {name}, задайте поиск точнее')
-    except ObjectDoesNotExist:
+    except Schoolkid.DoesNotExist:
         print(f'Не найдено ни одного ученика с имени {name}')
 
 
